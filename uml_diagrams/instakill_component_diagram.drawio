@@ -1,0 +1,49 @@
+<mxfile host="Electron">
+  <diagram name="Backend Component Diagram" id="ZUihLxOOGifPNO_H1bq-">
+    <mxGraphModel dx="1411" dy="858" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="59jfpI9TfNfaKVh5j0RM-1" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;fontStyle=1;fontSize=14;startSize=40;" value="Backend Container [Spring Boot Application]" vertex="1">
+          <mxGeometry height="620" width="760" x="510" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="59jfpI9TfNfaKVh5j0RM-2" parent="59jfpI9TfNfaKVh5j0RM-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Security &amp; Filters&#xd;&#xa;[JwtAuthenticationFilter, SecurityConfig]" vertex="1">
+          <mxGeometry height="60" width="220" x="40" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="59jfpI9TfNfaKVh5j0RM-3" parent="59jfpI9TfNfaKVh5j0RM-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Presentation / API Layer&#xd;&#xa;[REST Controllers &amp; Thymeleaf Web Controllers]" vertex="1">
+          <mxGeometry height="60" width="220" x="310" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="59jfpI9TfNfaKVh5j0RM-4" parent="59jfpI9TfNfaKVh5j0RM-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="Application Services Layer&#xd;&#xa;[UserService, PostService, InteractionService, FeedService]" vertex="1">
+          <mxGeometry height="70" width="220" x="310" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="59jfpI9TfNfaKVh5j0RM-5" parent="59jfpI9TfNfaKVh5j0RM-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Domain &amp; Strategies&#xd;&#xa;[Post, User, FeedRankingStrategy, Events]" vertex="1">
+          <mxGeometry height="60" width="220" x="310" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="59jfpI9TfNfaKVh5j0RM-6" parent="59jfpI9TfNfaKVh5j0RM-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="Persistence &amp; Infrastructure&#xd;&#xa;[JPA Adapters, Repositories, Entities]" vertex="1">
+          <mxGeometry height="60" width="220" x="310" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="59jfpI9TfNfaKVh5j0RM-7" edge="1" parent="59jfpI9TfNfaKVh5j0RM-1" source="59jfpI9TfNfaKVh5j0RM-2" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="59jfpI9TfNfaKVh5j0RM-3" value="Validates JWT">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="59jfpI9TfNfaKVh5j0RM-8" edge="1" parent="59jfpI9TfNfaKVh5j0RM-1" source="59jfpI9TfNfaKVh5j0RM-3" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="59jfpI9TfNfaKVh5j0RM-4" value="Calls Business Logic">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="59jfpI9TfNfaKVh5j0RM-9" edge="1" parent="59jfpI9TfNfaKVh5j0RM-1" source="59jfpI9TfNfaKVh5j0RM-4" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="59jfpI9TfNfaKVh5j0RM-5" value="Applies Rules / Strategies">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="59jfpI9TfNfaKVh5j0RM-10" edge="1" parent="59jfpI9TfNfaKVh5j0RM-1" source="59jfpI9TfNfaKVh5j0RM-5" style="endArrow=classic;startArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="59jfpI9TfNfaKVh5j0RM-6" value="Persists Data">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="59jfpI9TfNfaKVh5j0RM-11" parent="1" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;backgroundBackground=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Relational Database&#xd;&#xa;(H2 / PostgreSQL)" vertex="1">
+          <mxGeometry height="80" width="160" x="850" y="870" as="geometry" />
+        </mxCell>
+        <mxCell id="59jfpI9TfNfaKVh5j0RM-12" edge="1" parent="1" source="59jfpI9TfNfaKVh5j0RM-6" style="endArrow=classic;startArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="59jfpI9TfNfaKVh5j0RM-11" value="JDBC / JPA Queries">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="850" y="710" as="sourcePoint" />
+            <mxPoint x="850" y="840" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
