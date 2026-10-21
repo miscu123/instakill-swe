@@ -28,3 +28,12 @@ instakill:
 logging:
   level:
     org.hibernate.SQL: warn
+
+media:
+  base-path: media
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB

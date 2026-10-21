@@ -27,9 +27,16 @@
       <section v-else class="feed">
         <form @submit.prevent="createNewPost" class="card form composer">
           <textarea v-model="composer.content" rows="3" placeholder="Share something..." required></textarea>
-          <input v-model="composer.imageUrl" placeholder="Image URL (optional)">
+          
+          <!-- NEW: File Upload Input -->
+          <input type="file" @change="handleFileUpload" accept="image/*,video/mp4,video/quicktime" />
+          
+          <input v-model="composer.imageUrl" placeholder="Or paste an Image/Video URL (optional)">
           <div class="actions">
-            <button type="submit">Post</button>
+            <!-- NEW: Dynamic uploading state -->
+            <button type="submit" :disabled="isUploading">
+              {{ isUploading ? 'Posting...' : 'Post' }}
+            </button>
           </div>
         </form>
 
@@ -54,7 +61,10 @@
             </div>
           </header>
           <p>{{ post.content }}</p>
-          <img v-if="post.imageUrl" :src="post.imageUrl" alt="post image">
+          
+          <!-- Automatically attempts to render as an image (you could enhance this to use <video> tags if it's an mp4) -->
+          <img v-if="post.imageUrl && !post.imageUrl.endsWith('.mp4')" :src="post.imageUrl" alt="post media">
+          <video v-else-if="post.imageUrl && post.imageUrl.endsWith('.mp4')" :src="post.imageUrl" controls class="post-video"></video>
           
           <!-- Comments Section -->
           <section class="comments">
@@ -92,7 +102,8 @@
 
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
-import { createPost, fetchMe, listFeed, login, register as registerUser, toggleLike, listComments, addComment } from './api'
+// NEW: Make sure 'uploadMedia' is imported here
+import { createPost, fetchMe, listFeed, login, register as registerUser, toggleLike, listComments, addComment, uploadMedia } from './api'
 
 const user = ref(null)
 const posts = ref([])
@@ -107,6 +118,10 @@ const comments = reactive({})
 const newComment = reactive({})
 const commentLoading = reactive({})
 const commentError = reactive({})
+
+// NEW: Upload state variables
+const selectedFile = ref(null)
+const isUploading = ref(false)
 
 onMounted(async () => {
   await bootstrap()
@@ -146,7 +161,6 @@ async function submitAuth() {
 
 async function loadFeed() {
   posts.value = await listFeed({ sort: sort.value })
-  // Load comments for each post
   for (const post of posts.value) {
     await loadComments(post.id)
   }
@@ -170,7 +184,6 @@ async function submitComment(postId) {
     await addComment(postId, { content: newComment[postId] })
     newComment[postId] = ''
     await loadComments(postId)
-    // Optionally, update commentCount in post
     const post = posts.value.find(p => p.id === postId)
     if (post) post.commentCount = (comments[postId]?.length || 0)
   } catch (e) {
@@ -180,12 +193,47 @@ async function submitComment(postId) {
   }
 }
 
+// NEW: File handler function
+function handleFileUpload(event) {
+  selectedFile.value = event.target.files[0]
+}
+
+// MODIFIED: Updated post creation logic
 async function createNewPost() {
   if (!composer.content.trim()) return
-  await createPost({ content: composer.content, imageUrl: composer.imageUrl || null })
-  composer.content = ''
-  composer.imageUrl = ''
-  await loadFeed()
+
+  isUploading.value = true
+  let finalImageUrl = composer.imageUrl || null
+
+  try {
+    // 1. Upload file if one is selected
+    if (selectedFile.value) {
+      const uploadResult = await uploadMedia(selectedFile.value)
+      finalImageUrl = uploadResult.mediaUrl
+    }
+
+    // 2. Create the post
+    await createPost({ 
+      content: composer.content, 
+      imageUrl: finalImageUrl 
+    })
+
+    // 3. Clean up the form
+    composer.content = ''
+    composer.imageUrl = ''
+    selectedFile.value = null
+    
+    // Clear the visual file input
+    const fileInput = document.querySelector('input[type="file"]')
+    if (fileInput) fileInput.value = ''
+
+    await loadFeed()
+  } catch (error) {
+    console.error("Error creating post:", error)
+    alert("Failed to create post. Check file size or type.")
+  } finally {
+    isUploading.value = false
+  }
 }
 
 async function togglePostLike(post) {
@@ -327,9 +375,13 @@ async function logout() {
   margin-bottom: 0.75rem;
 }
 
-.post img {
+/* NEW: Added support for styling videos cleanly */
+.post img,
+.post-video {
   margin-top: 0.75rem;
   width: 100%;
+  max-height: 500px;
+  object-fit: cover;
   border-radius: 12px;
 }
 

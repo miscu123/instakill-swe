@@ -35,3 +35,22 @@ export function addComment(postId, payload) {
 export function listComments(postId) {
   return client.get(`/api/posts/${postId}/comments`).then(res => res.data)
 }
+
+export async function uploadMedia(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/media', {
+        method: 'POST',
+        // Do NOT set 'Content-Type': 'multipart/form-data'. 
+        // fetch will automatically set it along with the correct boundary.
+        body: formData,
+        // headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } // Uncomment if using JWT
+    });
+
+    if (!response.ok) {
+        throw new Error('File upload failed');
+    }
+
+    return response.json(); // Returns { mediaUrl: "/media/..." }
+}
