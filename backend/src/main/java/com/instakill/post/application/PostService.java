@@ -8,6 +8,7 @@ import com.instakill.feed.application.FeedService;
 import com.instakill.feed.domain.FeedSort;
 import com.instakill.post.domain.Post;
 import com.instakill.post.domain.PostRepository;
+import com.instakill.notification.application.PostNotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,12 +24,19 @@ public class PostService {
     private final IdGenerator idGenerator;
     private final Clock clock;
     private final FeedService feedService;
+    private final PostNotificationService notificationService;
 
-    public PostService(PostRepository posts, IdGenerator idGenerator, Clock clock, FeedService feedService) {
+    // Unified constructor injecting all dependencies
+    public PostService(PostRepository posts,
+            IdGenerator idGenerator,
+            Clock clock,
+            FeedService feedService,
+            PostNotificationService notificationService) {
         this.posts = posts;
         this.idGenerator = idGenerator;
         this.clock = clock;
         this.feedService = feedService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -42,9 +50,15 @@ public class PostService {
                 now,
                 now,
                 0L,
-                0L
-        );
-        return posts.save(post);
+                0L);
+
+        // Save the post to the database
+        Post savedPost = posts.save(post);
+
+        // Trigger the asynchronous notification
+        notificationService.notifyPostCreated(savedPost);
+
+        return savedPost;
     }
 
     public Post getPost(UUID id) {

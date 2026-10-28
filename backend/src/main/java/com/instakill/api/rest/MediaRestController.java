@@ -1,5 +1,6 @@
 package com.instakill.api.rest;
 
+import com.instakill.media.application.ImageProcessingService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -22,47 +23,59 @@ public class MediaRestController {
     @Value("${media.base-path:media}")
     private String mediaBasePath;
 
-    // Allowed extensions (Optional task)
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(".jpg", ".jpeg", ".png", ".mp4", ".mov");
+    private final ImageProcessingService imageProcessingService;
+
+    private static final Set<String> IMAGE_EXTENSIONS = Set.of(".jpg", ".jpeg", ".png");
+    private static final Set<String> VIDEO_EXTENSIONS = Set.of(".mp4", ".mov");
+
+    public MediaRestController(ImageProcessingService imageProcessingService) {
+        this.imageProcessingService = imageProcessingService;
+    }
 
     @PostConstruct
     public void init() {
         try {
             Files.createDirectories(Paths.get(mediaBasePath));
         } catch (IOException e) {
-            throw new RuntimeException("Failed to create media directory at startup", e);
+            throw new RuntimeException("Failed to create media directory", e);
         }
     }
 
     @PostMapping
     public ResponseEntity<?> uploadMedia(@RequestParam("file") MultipartFile file) {
-        if (file.isEmpty()) {
+        if (file.isEmpty())
             return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
-        }
 
         try {
             String originalFilename = file.getOriginalFilename();
-            String extension = "";
+            String extension = originalFilename != null && originalFilename.contains(".")
+                    ? originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase()
+                    : "";
 
-            if (originalFilename != null && originalFilename.contains(".")) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
-            }
+            boolean isImage = IMAGE_EXTENSIONS.contains(extension);
+            boolean isVideo = VIDEO_EXTENSIONS.contains(extension);
 
-            if (!ALLOWED_EXTENSIONS.contains(extension)) {
+            if (!isImage && !isVideo) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Invalid file extension"));
             }
 
             String newFilename = UUID.randomUUID() + extension;
             Path filePath = Paths.get(mediaBasePath, newFilename);
 
-            file.transferTo(filePath.toFile());
+            if (isImage) {
+                // Route through our new image processing service module
+                imageProcessingService.processAndSaveImage(file.getInputStream(), filePath.toFile(), extension);
+            } else {
+                // Direct file transfer for video formats
+                file.transferTo(filePath.toFile());
+            }
 
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("mediaUrl", "/media/" + newFilename));
 
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to upload file"));
+                    .body(Map.of("error", "Failed to process and upload file"));
         }
     }
 }
